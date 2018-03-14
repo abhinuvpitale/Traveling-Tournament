@@ -376,7 +376,7 @@ class Schedule():
         Final Cost - >
         
         {}
-        '''.format(self.scheduleMap,self.cost(self.scheduleMap))
+        '''.format(S,self.cost(S))
         writer = open('''{}_{}_{}_{}_{}_{}_{}_{}_{}.txt'''.format(maxR,maxP,maxC,T,theta,beta,sigma,w,self.n),'w+')
         writer.write(summaryFile)
         writer.close()
