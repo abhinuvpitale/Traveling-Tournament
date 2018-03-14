@@ -11,8 +11,8 @@ minDist = 10
 
 # Distances
 maxR = 10
-maxP = 10
-maxC = 10
+maxP = 100
+maxC = 100
 T = 400
 theta = 1.04
 sigma = 1.04

@@ -244,7 +244,7 @@ class Schedule():
         return math.sqrt((sum1*sum1)+(w*self.func(violations))*(w*self.func(violations)))
 
     def func(self,sum1):
-        return 1 + math.sqrt(sum1)*math.log(sum1/2,math.e)
+        return 1 + math.sqrt(sum1)*math.log(sum1/2.0,math.e)
 
     def getDist(self,S,team,currPlace,nextPlace):
         currPlace = -currPlace
