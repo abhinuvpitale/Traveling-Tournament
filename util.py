@@ -24,7 +24,7 @@ class Schedule():
             self.scheduleMap, self.distanceMap = self.hardcode(6)
         else:
             self.scheduleMap = self.buildRandomSchedule()
-            self.distanceMap = self.createDistanceMap()
+            self.distanceMap = self.createDistanceMap(n)
         self.addSummary('''
 Hardcoded Solution = {}
 n = {}
@@ -164,6 +164,15 @@ initial Violations = {}
                 distanceMap[idx][inneridx] = dist
                 distanceMap[inneridx][idx] = dist
         return distanceMap
+        
+            def createDistanceMap(self):
+        distanceMap = np.zeros((self.n,self.n))
+        for idx in range(self.n):
+            for inneridx in range(idx+1):
+                dist = random.randint(config.minDist,config.maxDist)
+                distanceMap[idx][inneridx] = dist
+                distanceMap[inneridx][idx] = dist
+        return distanceMap
         '''
     # Swap the home and away games of teamA and teamB
     def swapHomes(self,teamA,teamB):
@@ -243,14 +252,7 @@ initial Violations = {}
         while 1:
             for item in swapArr:
     '''
-    def createDistanceMap(self):
-        distanceMap = np.zeros((self.n,self.n))
-        for idx in range(self.n):
-            for inneridx in range(idx+1):
-                dist = random.randint(config.minDist,config.maxDist)
-                distanceMap[idx][inneridx] = dist
-                distanceMap[inneridx][idx] = dist
-        return distanceMap
+
 
     def cost(self, S):
         dist = list([0] * self.n)
