@@ -1,0 +1,69 @@
+Summary
+Hardcoded Solution = False
+n = 4
+Distance Map = 
+[[ 80.  39.  76.  81.]
+ [ 39.  33.  45.  15.]
+ [ 76.  45.  79.  14.]
+ [ 81.  15.  14.  37.]]
+
+initial Solution = 
+[[ 2  3 -4 -2  4 -3]
+ [-1  4  3  1 -3 -4]
+ [-4 -1 -2  4  2  1]
+ [ 3 -2  1 -3 -1  2]]
+        
+initial Cost = 1356.0
+        
+initial Violations = 0       
+
+        
+Initial Parameters
+
+maxR = 10
+maxP = 100
+maxC = 10
+T = 400
+theta = 1.04
+beta = 0.9999
+sigma = 1.04
+w = 4000
+
+        
+        
+Final Parameters
+
+T = 1590.2692224994028
+w = 3039.6712528082535
+bestT = 795.1346112497014
+
+bestInfeasible = 7104.399910995265
+bestFeasible = 1208.0
+
+time = 17.53243613243103
+
+        
+        
+Best Infeasible Solution ->
+
+[[-2 -4 -3  3  2  4]
+ [ 1  3 -4  4 -1 -3]
+ [-4 -2  1 -1  4  2]
+ [ 3  1  2 -2 -3 -1]]
+
+Cost = 7378.475247199116
+Violations = 4
+
+        
+
+Best Feasible Solution ->
+
+[[ 2 -3 -4 -2  3  4]
+ [-1  4  3  1 -4 -3]
+ [-4  1 -2  4 -1  2]
+ [ 3 -2  1 -3  2 -1]]
+
+Cost = 1208.0
+Violations = 0
+
+        

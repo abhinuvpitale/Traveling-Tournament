@@ -141,7 +141,22 @@ initial Violations = {}
 
 
     # Creates a distance map between two teams, :TODO needs to be tested
-    def createDistanceMap(self):
+    def createDistanceMap(self,n):
+        if n == 4:
+            return hardcode.cost4
+        if n == 6:
+            return hardcode.cost6
+        if n == 8:
+            return hardcode.cost8
+        if n == 10:
+            return hardcode.cost10
+        if n == 12:
+            return hardcode.cost12
+        if n == 14:
+            return hardcode.cost14
+        if n == 16:
+            return hardcode.cost16
+        '''
         distanceMap = np.zeros((self.n, self.n))
         for idx in range(self.n):
             for inneridx in range(idx + 1):
@@ -149,7 +164,7 @@ initial Violations = {}
                 distanceMap[idx][inneridx] = dist
                 distanceMap[inneridx][idx] = dist
         return distanceMap
-
+        '''
     # Swap the home and away games of teamA and teamB
     def swapHomes(self,teamA,teamB):
         idxA = teamA - 1
