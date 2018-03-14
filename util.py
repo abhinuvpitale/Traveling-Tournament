@@ -10,10 +10,13 @@ import time
 
 class Schedule():
     # Works
-    def __init__(self,n,hardcoded=False):
+    def __init__(self,n,hardcoded=False,maxR=config.maxR,maxP=config.maxP,maxC=config.maxC):
+        self.maxR = maxR
+        self.maxP = maxP
+        self.maxC = maxC
         self.summary = '''Summary'''
         self.n = n
-        self.summaryFileName = '''{}_{}_{}_{}_{}.txt'''.format(self.n,config.maxR,config.maxP,config.maxC,time.time())
+        self.summaryFileName = '''{}_{}_{}_{}_{}_{}.txt'''.format(self.n,maxR,maxP,maxC,time.time(),hardcoded)
         self.nTeams = n
         self.nRounds = 2*n - 2
         self.w = config.w
@@ -23,6 +26,7 @@ class Schedule():
             self.scheduleMap = self.buildRandomSchedule()
             self.distanceMap = self.createDistanceMap()
         self.addSummary('''
+Hardcoded Solution = {}
 n = {}
 Distance Map = 
 {}
@@ -34,7 +38,7 @@ initial Cost = {}
         
 initial Violations = {}       
 
-        '''.format(self.n,self.distanceMap,self.scheduleMap,self.cost(self.scheduleMap),self.getViolations(self.scheduleMap)))
+        '''.format(hardcoded,self.n,self.distanceMap,self.scheduleMap,self.cost(self.scheduleMap),self.getViolations(self.scheduleMap)))
         #self.simulatedAnnealing()
         print('Generated Schedule and Distance Map')
 
@@ -264,7 +268,6 @@ initial Violations = {}
             return sum1
 
     def complexCost(self,sum1,violations):
-
         return math.sqrt((sum1*sum1)+(self.w*self.func(violations))*(self.w*self.func(violations)))
 
     def func(self,sum1):
@@ -314,7 +317,6 @@ initial Violations = {}
         return violations
 
     def simulatedAnnealing(self):
-        start_time = time.time()
         bestFeasible = np.Inf
         nbf = np.Inf
         bestInfeasible = np.Inf
@@ -322,9 +324,9 @@ initial Violations = {}
         reheat = 0
         counter = 0
 
-        maxR = config.maxR
-        maxP = config.maxP
-        maxC = config.maxC
+        maxR = self.maxR
+        maxP = self.maxP
+        maxC = self.maxC
         T = config.T
         bestTemperature = config.T
         theta = config.theta
@@ -346,7 +348,7 @@ w = {}
 
         '''.format(maxR,maxP,maxC,T,theta,beta,sigma,self.w,self.scheduleMap,self.cost((self.scheduleMap))))
 
-
+        start_time = time.time()
         while reheat <= maxR:
             phase = 0
             while phase <= maxP:
@@ -373,10 +375,10 @@ w = {}
 
                     if accept:
                         self.scheduleMap = np.copy(St)
-                        if self.getViolations(St) == 0:
-                            nbf = min(self.cost(St), bestFeasible)
+                        if violationsSt == 0:
+                            nbf = min(costSt, bestFeasible)
                         else:
-                            nbi = min(self.cost(St), bestInfeasible)
+                            nbi = min(costSt, bestInfeasible)
                         if nbf < bestFeasible or nbi < bestInfeasible:
                             reheat = 0
                             counter = 0
@@ -384,8 +386,7 @@ w = {}
                             bestTemperature = T
                             bestFeasible = nbf
                             bestInfeasible = nbi
-                            if self.getViolations(St) == 0:
-
+                            if violationsSt == 0:
                                 self.w = self.w/theta
                             else:
                                 self.w = self.w*sigma
@@ -411,7 +412,7 @@ bestFeasible = {}
 
 time = {}
 
-        '''.format(T,w,bestTemperature,bestInfeasible,bestFeasible,clock_time))
+        '''.format(T,self.w,bestTemperature,bestInfeasible,bestFeasible,clock_time))
 
         self.addSummary('''
         
@@ -437,6 +438,7 @@ Violations = {}
         writer = open(self.summaryFileName,'w+')
         writer.write(self.summary)
         writer.close()
+        print('Done Solving, writing to File!')
 
 
     def randomMove(self):
