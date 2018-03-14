@@ -4,23 +4,42 @@ import random
 import config
 import hardcode
 import math
+import time
 
 
 
 class Schedule():
     # Works
     def __init__(self,n,hardcoded=False):
+        self.summary = '''Summary'''
         self.n = n
+        self.summaryFileName = '''{}_{}_{}_{}_{}.txt'''.format(self.n,config.maxR,config.maxP,config.maxC,time.time())
         self.nTeams = n
         self.nRounds = 2*n - 2
-
+        self.w = config.w
         if hardcoded:
             self.scheduleMap, self.distanceMap = self.hardcode(6)
         else:
             self.scheduleMap = self.buildRandomSchedule()
             self.distanceMap = self.createDistanceMap()
-        self.simulatedAnnealing()
-        print(1)
+        self.addSummary('''
+n = {}
+Distance Map = 
+{}
+
+initial Solution = 
+{}
+        
+initial Cost = {}
+        
+initial Violations = {}       
+
+        '''.format(self.n,self.distanceMap,self.scheduleMap,self.cost(self.scheduleMap),self.getViolations(self.scheduleMap)))
+        #self.simulatedAnnealing()
+        print('Generated Schedule and Distance Map')
+
+    def addSummary(self, content):
+        self.summary = self.summary + content
 
     def hardcode(self,n):
         if n == 4:
@@ -199,7 +218,12 @@ class Schedule():
             temp2 = self.scheduleMap[item,roundB-1]
             self.scheduleMap[item,roundA-1] = temp2
             self.scheduleMap[item,roundB-1] = temp1
-
+    '''
+    def partialSwapTeams(self,teamA,teamB,round):
+        swapArr = [abs(self.scheduleMap[teamA-1,round-1]),abs(self.scheduleMap[teamB-1,round-1])]
+        while 1:
+            for item in swapArr:
+    '''
     def createDistanceMap(self):
         distanceMap = np.zeros((self.n,self.n))
         for idx in range(self.n):
@@ -233,15 +257,15 @@ class Schedule():
         violations = self.getViolations(S)
         if violations > 0:
             thissum = self.complexCost(sum1, violations)
-            print(thissum)
+            #print(thissum)
             return thissum
         else:
-            print(sum1)
+            #print(sum1)
             return sum1
 
     def complexCost(self,sum1,violations):
-        w = config.w
-        return math.sqrt((sum1*sum1)+(w*self.func(violations))*(w*self.func(violations)))
+
+        return math.sqrt((sum1*sum1)+(self.w*self.func(violations))*(self.w*self.func(violations)))
 
     def func(self,sum1):
         return 1 + math.sqrt(sum1)*math.log(sum1/2.0,math.e)
@@ -290,6 +314,7 @@ class Schedule():
         return violations
 
     def simulatedAnnealing(self):
+        start_time = time.time()
         bestFeasible = np.Inf
         nbf = np.Inf
         bestInfeasible = np.Inf
@@ -301,30 +326,25 @@ class Schedule():
         maxP = config.maxP
         maxC = config.maxC
         T = config.T
+        bestTemperature = config.T
         theta = config.theta
         sigma = config.sigma
         beta = config.beta
-        w = config.w
+        w = self.w
 
-        summaryFile = '''
-        Run
-        maxR = {}
-        maxP = {}
-        maxC = {}
-        T = {}
-        theta = {}
-        beta = {}
-        sigma = {}
-        w = {}
-        
-        Input Solution - >
-        
-        {}
-        
-        Inital Cost - >
-        
-        {}
-        '''.format(maxR,maxP,maxC,T,theta,beta,sigma,w,self.scheduleMap,self.cost((self.scheduleMap)))
+        self.addSummary('''
+Initial Parameters
+
+maxR = {}
+maxP = {}
+maxC = {}
+T = {}
+theta = {}
+beta = {}
+sigma = {}
+w = {}
+
+        '''.format(maxR,maxP,maxC,T,theta,beta,sigma,self.w,self.scheduleMap,self.cost((self.scheduleMap))))
 
 
         while reheat <= maxR:
@@ -338,51 +358,90 @@ class Schedule():
                     costSt = self.cost(St)
                     violationsS = self.getViolations(S)
                     violationsSt = self.getViolations(St)
-                    if costSt < costS or violationsSt == 0 or costSt < bestFeasible or costS > 0 and violationsS < bestInfeasible:
+                    if ((costSt < costS) or (violationsSt == 0) and (costSt < bestFeasible) or (violationsS > 0) and (costS < bestInfeasible)):
                         accept = True
                     else:
                         if math.exp(-abs(costS - costSt) / T) > random.random():
                             accept = True
                         else:
                             accept = False
+                            self.scheduleMap = S
+                    if costSt < bestFeasible and violationsSt == 0:
+                        self.bestSolF = np.copy(St)
+                    if costSt < bestInfeasible and violationsSt > 0:
+                        self.bestSolI = np.copy(St)
+
                     if accept:
-                        S = St
-                        if self.getViolations(S) == 0:
-                            nbf = min(self.cost(S), bestFeasible)
+                        self.scheduleMap = np.copy(St)
+                        if self.getViolations(St) == 0:
+                            nbf = min(self.cost(St), bestFeasible)
                         else:
-                            nbi = min(self.cost(S), bestInfeasible)
+                            nbi = min(self.cost(St), bestInfeasible)
                         if nbf < bestFeasible or nbi < bestInfeasible:
                             reheat = 0
                             counter = 0
+                            phase = 0
                             bestTemperature = T
                             bestFeasible = nbf
                             bestInfeasible = nbi
-                            if self.getViolations(S):
-                                w = w/theta
+                            if self.getViolations(St) == 0:
+
+                                self.w = self.w/theta
                             else:
-                                w = w*sigma
+                                self.w = self.w*sigma
                         else:
                             counter = counter + 1
                 phase = phase + 1
                 T = T*beta
             reheat = reheat + 1
             T = 2*bestTemperature
-        summaryFile = summaryFile + '''
+
+        clock_time = time.time() - start_time
+
+        self.addSummary('''
         
-        Final Solution - >
+Final Parameters
+
+T = {}
+w = {}
+bestT = {}
+
+bestInfeasible = {}
+bestFeasible = {}
+
+time = {}
+
+        '''.format(T,w,bestTemperature,bestInfeasible,bestFeasible,clock_time))
+
+        self.addSummary('''
         
-        {}
-        
-        Final Cost - >
-        
-        {}
-        '''.format(S,self.cost(S))
-        writer = open('''{}_{}_{}_{}_{}_{}_{}_{}_{}.txt'''.format(maxR,maxP,maxC,T,theta,beta,sigma,w,self.n),'w+')
-        writer.write(summaryFile)
+Best Infeasible Solution ->
+
+{}
+
+Cost = {}
+Violations = {}
+
+        '''.format(self.bestSolI,self.cost(self.bestSolI),self.getViolations(self.bestSolI)))
+
+        self.addSummary('''
+
+Best Feasible Solution ->
+
+{}
+
+Cost = {}
+Violations = {}
+
+        '''.format(self.bestSolF, self.cost(self.bestSolF), self.getViolations(self.bestSolF)))
+        writer = open(self.summaryFileName,'w+')
+        writer.write(self.summary)
         writer.close()
+
+
     def randomMove(self):
         choice = random.randint(0,3)
-        print(choice)
+        #print(choice)
         if choice == 0:
             S = np.copy(self.scheduleMap)
             randTeamA,randTeamB = random.sample(range(1,self.n+1),2)
@@ -405,3 +464,19 @@ class Schedule():
             self.partialSwapRounds(randTeam,randRoundA,randRoundB)
             St = np.copy(self.scheduleMap)
         return S,St
+
+    def printSchedule(self,S):
+        print('Rounds - >')
+        rounder = '      '
+        for item in range(1, self.nRounds + 1):
+            rounder = rounder + '''   {}  '''.format(item)
+        print(rounder)
+        print('Teams')
+        count = 1
+        for item in S:
+            teamer = '''   {}   '''.format(count)
+            count = count + 1
+            for inneritem in item:
+                teamer = teamer + '''  {}  '''.format(inneritem)
+            print(teamer)
+

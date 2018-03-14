@@ -1,10 +1,8 @@
 from __future__ import print_function
 from util import Schedule
 
-TTSA = Schedule(6,hardcoded=True)
-print(TTSA.scheduleMap)
-TTSA.swapTeams(2,3)
-print(TTSA.scheduleMap)
+TTSA = Schedule(6,hardcoded = True)
+TTSA.simulatedAnnealing()
 
 '''
 print(TTSA.distanceMap)
