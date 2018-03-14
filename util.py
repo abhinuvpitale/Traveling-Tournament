@@ -1,9 +1,10 @@
+from __future__ import print_function
 import numpy as np
 import random
 import config
 import hardcode
 import math
-from __future__ import print_function
+
 
 
 class Schedule():
