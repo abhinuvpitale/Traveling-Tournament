@@ -11,6 +11,17 @@ import time
 class Schedule():
     # Works
     def __init__(self,n,hardcoded=False,maxR=config.maxR,maxP=config.maxP,maxC=config.maxC):
+        '''
+
+        :param n: Number of Teams
+        :param hardcoded:   True -  if using values from the CMU website
+                            False - if generated schedule is random
+        :param maxR: Reheats
+        :param maxP: Phase
+        :param maxC: Counter
+        '''
+        self.bestSolF = None
+        self.bestSolI = None
         self.maxR = maxR
         self.maxP = maxP
         self.maxC = maxC
@@ -24,6 +35,7 @@ class Schedule():
             self.scheduleMap, self.distanceMap = self.hardcode(6)
         else:
             self.scheduleMap = self.buildRandomSchedule()
+            print(self.scheduleMap)
             self.distanceMap = self.createDistanceMap(n)
         self.addSummary('''
 Hardcoded Solution = {}
@@ -43,21 +55,42 @@ initial Violations = {}
         print('Generated Schedule and Distance Map')
 
     def addSummary(self, content):
+        '''
+        Used for creating the log file
+        :param content: add content to be written
+        '''
         self.summary = self.summary + content
 
     def hardcode(self,n):
+        '''
+        Uses hardcode.py which has values from CMU website
+        :param n: number of teams
+        :return: hardcoded values
+        '''
         if n == 4:
             return hardcode.hardcode4
         if n == 6:
             return hardcode.hardcode6,hardcode.cost6
-    # Generates a Random Schedule satisfying the hard constraints and one of the soft constraints
+
     def buildRandomSchedule(self):
+        '''
+        Generates a Random Schedule satisfying the hard constraints and one of the soft constraints
+        :return: Travelling Tournament Schedule
+        '''
         S = (self.n+1)*np.ones([self.n,2*self.n-2],dtype=int)
         return self.buildSchedule(S,0,0)
 
 
-    # Back Tracking to build the schedule
+
     def buildSchedule(self,S,team,roundN):
+        '''
+        Back Tracking to build the schedule
+        :param S: Current instanc of schedule
+        :param team: nth team
+        :param roundN: nth round
+        :return: updated schedule
+        '''
+        print('''{},{}'''.format(team,roundN))
         # Return if complete
         if self.checkComplete(S):
             return S
@@ -92,8 +125,13 @@ initial Violations = {}
         return None
 
 
-    # Helper for build Schedule to check if the the matrix is completely built
+
     def checkComplete(self,S):
+        '''
+        Helper for build Schedule to check if the the matrix is completely built
+        :param S: Schedule
+        :return: true if complete
+        '''
         for idx in range(self.nTeams):
             for innerIdx in range(self.nRounds):
                 if S[idx,innerIdx] == (self.nTeams + 1):
@@ -101,8 +139,15 @@ initial Violations = {}
         return True
 
 
-    # Helper for build Schedule to get the Q matrix
+
     def getChoices(self,S,team,roundN):
+        '''
+        Helper for build Schedule to get the Q (Choice) matrix
+        :param S: Schedule
+        :param team: nth team
+        :param roundN: nth round
+        :return: Choices for team,roundN
+        '''
         Q = []
 
         # All elements
@@ -140,8 +185,13 @@ initial Violations = {}
         return Q
 
 
-    # Creates a distance map between two teams, :TODO needs to be tested
+
     def createDistanceMap(self,n):
+        '''
+        Create the distance map
+        :param n: #teams
+        :return: returns hardcoded values from the CMU website
+        '''
         if n == 4:
             return hardcode.cost4
         if n == 6:
@@ -174,8 +224,13 @@ initial Violations = {}
                 distanceMap[inneridx][idx] = dist
         return distanceMap
         '''
-    # Swap the home and away games of teamA and teamB
+
     def swapHomes(self,teamA,teamB):
+        '''
+        Swap the home and away games of teamA and teamB
+        :param teamA:
+        :param teamB:
+        '''
         idxA = teamA - 1
         idxB = teamB - 1
         idx = np.where(abs(self.scheduleMap[idxA,:]) == teamB)
@@ -188,16 +243,26 @@ initial Violations = {}
         self.scheduleMap[idxB, idx1] = self.scheduleMap[idxB, idx2]
         self.scheduleMap[idxB, idx2] = temp
 
-    # Swap the rounds completely
+
     def swapRounds(self,roundA,roundB):
+        '''
+        Swap the rounds completely
+        :param roundA:
+        :param roundB:
+        '''
         roundA = roundA - 1
         roundB = roundB - 1
         temp = np.copy(self.scheduleMap[:,roundA])
         self.scheduleMap[:,roundA] = self.scheduleMap[:,roundB]
         self.scheduleMap[:,roundB] = temp
 
-    # Swap Schedule of teams, i.e all games except home and away ones.
+
     def swapTeams(self,teamA,teamB):
+        '''
+        Swap Schedule of teams, i.e all games except home and away ones.
+        :param teamA:
+        :param teamB:
+        '''
         idxA = teamA - 1
         idxB = teamB - 1
         temp = np.copy(self.scheduleMap[idxA,:])
@@ -226,6 +291,12 @@ initial Violations = {}
         self.scheduleMap[idxB][idx1] = -self.scheduleMap[idxB][idx1]
 
     def partialSwapRounds(self,team,roundA,roundB):
+        '''
+        Swap rounds without satisfying the soft constraints
+        :param team:
+        :param roundA:
+        :param roundB:
+        '''
         teamA = team
         swapArr = [teamA-1]
         while 1:
@@ -255,6 +326,11 @@ initial Violations = {}
 
 
     def cost(self, S):
+        '''
+
+        :param S: Schedule
+        :return: Cost associated with S
+        '''
         dist = list([0] * self.n)
 
         # Init Cost
@@ -272,7 +348,7 @@ initial Violations = {}
         for idx in range(len(dist)):
             dist[idx] = dist[idx] + self.getDist(S, idx + 1, S[idx, -1], idx + 1)
 
-        sum1 = 0
+        sum1 = 0.0
         for item in dist:
             sum1 = sum1 + item
         violations = self.getViolations(S)
@@ -285,12 +361,31 @@ initial Violations = {}
             return sum1
 
     def complexCost(self,sum1,violations):
+        '''
+        Helper function for cost
+        :param sum1: simple cost
+        :param violations: number of violations for schedule S
+        :return: cost
+        '''
         return math.sqrt((sum1*sum1)+(self.w*self.func(violations))*(self.w*self.func(violations)))
 
     def func(self,sum1):
+        '''
+        helper function to cost
+        :param sum1: cost
+        :return: non linear cost assocaited with violated games
+        '''
         return 1 + math.sqrt(sum1)*math.log(sum1/2.0,math.e)
 
     def getDist(self,S,team,currPlace,nextPlace):
+        '''
+        Helper function used to find the distance between two teams
+        :param S: Schedule
+        :param team: current team
+        :param currPlace: current Round
+        :param nextPlace: Next Round
+        :return: distance travelled between current and next round, calculated using the self.distanceMap
+        '''
         currPlace = -currPlace
         nextPlace = -nextPlace
         if currPlace < 0:
@@ -300,6 +395,11 @@ initial Violations = {}
         return self.distanceMap[currPlace-1,nextPlace-1]
 
     def getViolations(self,S):
+        '''
+        Get total number of Violations (for soft constraints) for a schdeule S
+        :param S: Schedule
+        :return: get number of violations
+        '''
         violations = 0
         team = 0
         roundN = 0
@@ -334,6 +434,9 @@ initial Violations = {}
         return violations
 
     def simulatedAnnealing(self):
+        '''
+        The actual Simulated Annealing Algorithm for Travelling Tournament problem
+        '''
         bestFeasible = np.Inf
         nbf = np.Inf
         bestInfeasible = np.Inf
@@ -459,6 +562,11 @@ Violations = {}
 
 
     def randomMove(self):
+        '''
+        Select a random move
+        :return: returns S,St where St is the updated schedule
+        TODO : add partialSwapTeams
+        '''
         choice = random.randint(0,3)
         #print(choice)
         if choice == 0:
@@ -485,6 +593,10 @@ Violations = {}
         return S,St
 
     def printSchedule(self,S):
+        '''
+        pretty print the schedule S
+        :param S: Schedule
+        '''
         print('Rounds - >')
         rounder = '      '
         for item in range(1, self.nRounds + 1):

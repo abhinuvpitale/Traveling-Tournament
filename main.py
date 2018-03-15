@@ -1,9 +1,9 @@
 from __future__ import print_function
-from util import Schedule
+from simulatedAnnealing import Schedule
 
 TTSA = Schedule(4)
 TTSA.simulatedAnnealing()
-
+'''
 TTSA = Schedule(4,hardcoded = False,maxR = 10,maxP = 100,maxC = 10)
 TTSA.simulatedAnnealing()
 
@@ -15,7 +15,7 @@ TTSA.simulatedAnnealing()
 
 TTSA = Schedule(4,hardcoded = False,maxR = 30,maxP = 10,maxC = 10)
 TTSA.simulatedAnnealing()
-
+'''
 '''
 print(TTSA.distanceMap)
 print(TTSA.cost())
